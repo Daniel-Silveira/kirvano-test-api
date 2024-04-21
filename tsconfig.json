@@ -1,9 +1,9 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
-  "include": ["./src/**/*.ts"],
+  "include": ["./src/**/*.ts", "./test/**/*.ts"],
   "exclude": ["node_modules", "src/__mocks__/", "dist/**/*", "dist/test/**/*"],
   "compilerOptions": {
-    "moduleResolution": "Node16",
+    "moduleResolution": "NodeNext",
     "target": "ES5",
     "outDir": "dist",
     "noImplicitAny": false
