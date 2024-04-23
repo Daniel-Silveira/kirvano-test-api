@@ -10,44 +10,65 @@ import {
 export class ProcessPayment {
   static execute(payment: Payment): Promise<string> {
     return new Promise((resolve, reject) => {
-      if (!payment.name || typeof payment.name !== 'string') {
-        return reject(new Error(errorMessage));
+      try {
+        this.validatePayment(payment);
+        resolve(successPaymentMessage);
+      } catch (error) {
+        reject(error);
       }
-      if (!payment.cvv || !/^\d{3}$/.test(payment.cvv)) {
-        return reject(new Error(errorMessage));
-      }
-      if (!payment.cardNumber || !/^\d{16}$/.test(payment.cardNumber)) {
-        return reject(new Error(errorMessage));
-      }
-      if (
-        !payment.expirationDate ||
-        typeof payment.expirationDate !== 'object' ||
-        isNaN(payment.expirationDate.month) ||
-        isNaN(payment.expirationDate.year)
-      ) {
-        return reject(new Error(errorMessage));
-      }
-
-      if (/^(\d)\1{15}$/.test(payment.cardNumber.replace(/\s/g, ''))) {
-        return reject(new Error(invalidCardMessage));
-      }
-      if (payment.cardNumber.replaceAll(' ', '') === '1234123412341234') {
-        return reject(new Error(insufficientFundsMessage));
-      }
-
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      const currentMonth = currentDate.getMonth() + 1;
-
-      if (
-        payment.expirationDate.year < currentYear ||
-        (payment.expirationDate.year === currentYear &&
-          payment.expirationDate.month <= currentMonth)
-      ) {
-        return reject(new Error(expiredCardMessage));
-      }
-
-      resolve(successPaymentMessage);
     });
+  }
+
+  private static validatePayment(payment: Payment): void {
+    this.validateName(payment.name);
+    this.validateCVV(payment.cvv);
+    this.validateCardNumber(payment.cardNumber);
+    this.validateExpirationDate(payment.expirationDate);
+  }
+
+  private static validateName(name: string): void {
+    if (!name || typeof name !== 'string') {
+      throw new Error(errorMessage);
+    }
+  }
+
+  private static validateCVV(cvv: string): void {
+    if (!cvv || !/^\d{3}$/.test(cvv)) {
+      throw new Error(errorMessage);
+    }
+  }
+
+  private static validateCardNumber(cardNumber: string): void {
+    if (!cardNumber || !/^\d{16}$/.test(cardNumber)) {
+      throw new Error(errorMessage);
+    }
+    if (/^(\d)\1{15}$/.test(cardNumber.replace(/\s/g, ''))) {
+      throw new Error(invalidCardMessage);
+    }
+    if (cardNumber.replaceAll(' ', '') === '1234123412341234') {
+      throw new Error(insufficientFundsMessage);
+    }
+  }
+
+  private static validateExpirationDate(expirationDate: { month: number; year: number }): void {
+    if (
+      !expirationDate ||
+      typeof expirationDate !== 'object' ||
+      isNaN(expirationDate.month) ||
+      isNaN(expirationDate.year)
+    ) {
+      throw new Error(errorMessage);
+    }
+
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    if (
+      expirationDate.year < currentYear ||
+      (expirationDate.year === currentYear && expirationDate.month <= currentMonth)
+    ) {
+      throw new Error(expiredCardMessage);
+    }
   }
 }
