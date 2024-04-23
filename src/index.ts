@@ -1,7 +1,9 @@
 import express, { type Request, type Response } from 'express';
 import helmet from 'helmet';
 import { AuthenticationMiddleware } from './presentation/middleware/auth';
+import paymentController from './presentation/controller/payment/paymentController';
 import { createConnection } from './data-access/db';
+import { PaymentRepository } from './data-access/repositories/paymentRepository';
 
 const PORT = process.env.PORT !== undefined ? Number(process.env.PORT) : 3000;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN ?? 'access_token';
@@ -30,6 +32,7 @@ const env = {
 
   app.use(helmet());
   app.use(express.urlencoded({ extended: true }));
+  app.use(express.json());
 
   app.get('/public', (_req: Request, res: Response) => {
     res.send('This is a public resource');
@@ -42,6 +45,14 @@ const env = {
     (...args) => authMiddleware.handle(...args),
     (_req: Request, res: Response) => {
       res.send('This is a private resource');
+    },
+  );
+
+  app.post(
+    '/payments',
+    (...args) => authMiddleware.handle(...args),
+    (req, res) => {
+      paymentController.processPayment(req, res, new PaymentRepository(conn));
     },
   );
 
