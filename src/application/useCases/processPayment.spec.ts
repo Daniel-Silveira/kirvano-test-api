@@ -8,70 +8,82 @@ import {
   successPaymentMessage,
 } from '../constants/paymentMessages';
 
-describe('ProcessPayment', () => {
-  it('should reject with an error when "name" parameter is missing or invalid', async () => {
-    const invalidPayment = new Payment('', '123', '1234567890123456', { month: 12, year: 2023 });
+function expectPaymentRejection(payment, expectedError) {
+  return expect(ProcessPayment.execute(payment)).rejects.toThrow(expectedError);
+}
 
-    await expect(ProcessPayment.execute(invalidPayment)).rejects.toThrow(errorMessage);
+function expectPaymentAcceptance(payment) {
+  return expect(ProcessPayment.execute(payment)).resolves.toEqual(successPaymentMessage);
+}
+
+describe('UseCases: ProcessPayment', () => {
+  describe('Successful Cases', () => {
+    it('should resolve with "Payment accepted" when all parameters are valid', async () => {
+      const validPayment = new Payment('John Doe', '123', '1234567890123456', {
+        month: 12,
+        year: 2028,
+      });
+
+      await expectPaymentAcceptance(validPayment);
+    });
   });
 
-  it('should reject with an error when "cvv" parameter is missing or invalid', async () => {
-    const invalidPayment = new Payment('John Doe', '', '1234567890123456', {
-      month: 12,
-      year: 2023,
+  describe('Failure Cases', () => {
+    it('should reject with an error when "name" parameter is missing or invalid', async () => {
+      const invalidPayment = new Payment('', '123', '1234567890123456', { month: 12, year: 2023 });
+
+      await expectPaymentRejection(invalidPayment, errorMessage);
     });
 
-    await expect(ProcessPayment.execute(invalidPayment)).rejects.toThrow(errorMessage);
-  });
+    it('should reject with an error when "cvv" parameter is missing or invalid', async () => {
+      const invalidPayment = new Payment('John Doe', '', '1234567890123456', {
+        month: 12,
+        year: 2023,
+      });
 
-  it('should reject with an error when "cardNumber" parameter is missing or invalid', async () => {
-    const invalidPayment = new Payment('John Doe', '123', '', { month: 12, year: 2023 });
-
-    await expect(ProcessPayment.execute(invalidPayment)).rejects.toThrow(errorMessage);
-  });
-
-  it('should reject with an error when "expirationDate" parameter is missing or invalid', async () => {
-    const invalidPayment = new Payment('John Doe', '123', '1234567890123456', {
-      month: NaN,
-      year: NaN,
+      await expectPaymentRejection(invalidPayment, errorMessage);
     });
 
-    await expect(ProcessPayment.execute(invalidPayment)).rejects.toThrow(errorMessage);
-  });
+    it('should reject with an error when "cardNumber" parameter is missing or invalid', async () => {
+      const invalidPayment = new Payment('John Doe', '123', '', { month: 12, year: 2023 });
 
-  it('should reject with an error when the card number is invalid', async () => {
-    const invalidPayment = new Payment('John Doe', '123', '1111111111111111', {
-      month: 12,
-      year: 2023,
+      await expectPaymentRejection(invalidPayment, errorMessage);
     });
 
-    await expect(ProcessPayment.execute(invalidPayment)).rejects.toThrow(invalidCardMessage);
-  });
+    it('should reject with an error when "expirationDate" parameter is missing or invalid', async () => {
+      const invalidPayment = new Payment('John Doe', '123', '1234567890123456', {
+        month: NaN,
+        year: NaN,
+      });
 
-  it('should reject with an error when the card number has insufficient funds', async () => {
-    const invalidPayment = new Payment('John Doe', '123', '1234123412341234', {
-      month: 12,
-      year: 2023,
+      await expectPaymentRejection(invalidPayment, errorMessage);
     });
 
-    await expect(ProcessPayment.execute(invalidPayment)).rejects.toThrow(insufficientFundsMessage);
-  });
+    it('should reject with an error when the card number is invalid', async () => {
+      const invalidPayment = new Payment('John Doe', '123', '1111111111111111', {
+        month: 12,
+        year: 2023,
+      });
 
-  it('should reject with an error when the card is expired', async () => {
-    const expiredPayment = new Payment('John Doe', '123', '1234567890123456', {
-      month: 4,
-      year: 2022,
+      await expectPaymentRejection(invalidPayment, invalidCardMessage);
     });
 
-    await expect(ProcessPayment.execute(expiredPayment)).rejects.toThrow(expiredCardMessage);
-  });
+    it('should reject with an error when the card number has insufficient funds', async () => {
+      const invalidPayment = new Payment('John Doe', '123', '1234123412341234', {
+        month: 12,
+        year: 2023,
+      });
 
-  it('should resolve with "Payment accepted" when all parameters are valid', async () => {
-    const validPayment = new Payment('John Doe', '123', '1234567890123456', {
-      month: 12,
-      year: 2028,
+      await expectPaymentRejection(invalidPayment, insufficientFundsMessage);
     });
 
-    await expect(ProcessPayment.execute(validPayment)).resolves.toEqual(successPaymentMessage);
+    it('should reject with an error when the card is expired', async () => {
+      const expiredPayment = new Payment('John Doe', '123', '1234567890123456', {
+        month: 4,
+        year: 2022,
+      });
+
+      await expectPaymentRejection(expiredPayment, expiredCardMessage);
+    });
   });
 });

@@ -13,7 +13,7 @@ jest.mock('../../../application/useCases/processPayment', () => ({
   },
 }));
 
-describe('paymentController', () => {
+describe('PaymentController', () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
 
@@ -44,6 +44,21 @@ describe('paymentController', () => {
   });
 
   it('should return an error message when any parameter is missing', async () => {
+    await paymentController.processPayment(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
+  });
+
+  it('should return an error message when any parameter is empty', async () => {
+    const paymentData = {
+      name: '',
+      cvv: '',
+      cardNumber: '',
+      expirationDate: { month: '', year: '' },
+    };
+    req.body = paymentData;
+
     await paymentController.processPayment(req as Request, res as Response);
 
     expect(res.status).toHaveBeenCalledWith(500);
