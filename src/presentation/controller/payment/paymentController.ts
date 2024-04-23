@@ -2,9 +2,14 @@ import { Request, Response } from 'express';
 import { Payment } from '../../../application/entities/Payment';
 import { ProcessPayment } from '../../../application/useCases/processPayment';
 import { errorMessage } from '../../../application/constants/paymentMessages';
+import { PaymentRepositoryInterface } from '../../../data-access/repositories/paymentRepository';
 
 const paymentController = {
-  async processPayment(req: Request, res: Response): Promise<void> {
+  async processPayment(
+    req: Request,
+    res: Response,
+    paymentRepository: PaymentRepositoryInterface,
+  ): Promise<void> {
     const { name, cvv, cardNumber, expirationDate } = req.body;
 
     try {
@@ -15,6 +20,9 @@ const paymentController = {
       const payment = new Payment(name, cvv, cardNumber, expirationDate);
 
       const result = await ProcessPayment.execute(payment);
+
+      await paymentRepository.savePayment({ ...payment, status: result });
+
       res.json({ message: result });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
