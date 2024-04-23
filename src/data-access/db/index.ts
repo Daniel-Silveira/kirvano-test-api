@@ -18,6 +18,7 @@ export const createConnection = async (env: {
 
     conn.connect((err: mysql.MysqlError) => {
       if (err === null) {
+        clearTable(conn);
         createTable(conn);
         resolve(conn);
       } else {
@@ -27,16 +28,30 @@ export const createConnection = async (env: {
   });
 };
 
+const clearTable = (conn: mysql.Connection) => {
+  const query = `DELETE FROM payments`; // Exclui todos os registros da tabela payments
+
+  conn.query(query, err => {
+    if (err) {
+      console.error('Error clearing table:', err);
+    } else {
+      console.log('Table cleared successfully');
+    }
+  });
+};
+
 const createTable = (conn: mysql.Connection) => {
   const query = `
     CREATE TABLE IF NOT EXISTS payments (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
+      status VARCHAR(255) NOT NULL,
       cvv VARCHAR(255) NOT NULL,
       cardNumber VARCHAR(255) NOT NULL,
       expirationDate VARCHAR(255) NOT NULL
     )
   `;
+  
 
   conn.query(query, err => {
     if (err) {

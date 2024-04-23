@@ -6,17 +6,20 @@ import {
   insufficientFundsMessage,
   expiredCardMessage,
 } from '../constants/paymentMessages';
+import { PaymentRepositoryInterface } from '../../data-access/repositories/paymentRepository';
 
 export class ProcessPayment {
-  static execute(payment: Payment): Promise<string> {
-    return new Promise((resolve, reject) => {
-      try {
-        this.validatePayment(payment);
-        resolve(successPaymentMessage);
-      } catch (error) {
-        reject(error);
-      }
-    });
+  constructor(private paymentRepository: PaymentRepositoryInterface) {}
+
+  async execute(payment: Payment): Promise<string> {
+    try {
+      ProcessPayment.validatePayment(payment);
+      const result = successPaymentMessage;
+      await this.paymentRepository.savePayment({ ...payment, status: result });
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
 
   private static validatePayment(payment: Payment): void {

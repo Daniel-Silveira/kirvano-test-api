@@ -47,3 +47,4 @@ describe('PaymentController', () => {
     expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
   });
 });
+

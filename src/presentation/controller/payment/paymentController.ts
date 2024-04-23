@@ -18,12 +18,11 @@ const paymentController = {
       }
 
       const payment = new Payment(name, cvv, cardNumber, expirationDate);
+      const processPayment = new ProcessPayment(paymentRepository);
 
-      const result = await ProcessPayment.execute(payment);
+      const result = await processPayment.execute(payment);
 
-      await paymentRepository.savePayment({ ...payment, status: result });
-
-      res.json({ message: result });
+      res.status(200).json({ message: result });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

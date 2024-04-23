@@ -7,16 +7,26 @@ import {
   expiredCardMessage,
   successPaymentMessage,
 } from '../constants/paymentMessages';
-
-function expectPaymentRejection(payment, expectedError) {
-  return expect(ProcessPayment.execute(payment)).rejects.toThrow(expectedError);
-}
-
-function expectPaymentAcceptance(payment) {
-  return expect(ProcessPayment.execute(payment)).resolves.toEqual(successPaymentMessage);
-}
+import { PaymentRepositoryInterface } from '../../data-access/repositories/paymentRepository';
 
 describe('UseCases: ProcessPayment', () => {
+  let paymentRepositoryMock: PaymentRepositoryInterface;
+
+  beforeEach(() => {
+    paymentRepositoryMock = {
+      savePayment: jest.fn(),
+    } as unknown as PaymentRepositoryInterface;
+  });
+
+  function expectPaymentRejection(payment, expectedError) {
+    const processPayment = new ProcessPayment(paymentRepositoryMock);
+    return expect(processPayment.execute(payment)).rejects.toThrow(expectedError);
+  }
+
+  function expectPaymentAcceptance(payment) {
+    const processPayment = new ProcessPayment(paymentRepositoryMock);
+    return expect(processPayment.execute(payment)).resolves.toEqual(successPaymentMessage);
+  }
   describe('Successful Cases', () => {
     it('should resolve with "Payment accepted" when all parameters are valid', async () => {
       const validPayment = new Payment('John Doe', '123', '1234567890123456', {
