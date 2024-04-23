@@ -1,5 +1,3 @@
-// src/data-access/db.ts
-
 import mysql from 'mysql';
 
 export const createConnection = async (env: {
@@ -40,7 +38,7 @@ const createTable = (conn: mysql.Connection) => {
     )
   `;
 
-  conn.query(query, (err, result) => {
+  conn.query(query, err => {
     if (err) {
       console.error('Error creating table:', err);
     } else {
